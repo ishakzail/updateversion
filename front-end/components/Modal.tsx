@@ -451,9 +451,10 @@ const [title, setTitle] = useState('');
             ispassword : pass,
             password: passref.current.value,
           }
+          console.log('this what i send ', msg)
 
+          context?.socket?.emit('newChannel',msg)
         }
-        context?.socket?.emit('newChannel',msg)
       // closeModal()
       openModal();
 

@@ -306,7 +306,7 @@ export class ChatService {
             if (password !== undefined)
             {
                 const bool = await  bcrypt.compare(password,channel.password);
-                console.log('isTrue',bool, 'passClient',password.length, 'pass database', channel.password )
+                console.log('clientPass: ',password,'databasePass: ', channel.password)
                 if (!bool)
                     throw new NotFoundException(`uncorrect password`);
             }
