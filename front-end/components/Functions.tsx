@@ -2,8 +2,6 @@
 
 import GetDataHistory, {GetDataAchievement, GetDataFriend, DatSend, DataRecieved, BlackList} from '@/components/GetData';
 import BarLeft from './BarLeft';
-import { useContext } from 'react';
-import { MyContext } from './Context';
 
 interface PropsCallBarLeft{
   page : string;
@@ -16,12 +14,10 @@ export default function  Functions(){
 
 
 export function DataFunction (nbr : number){
-  const context  = useContext(MyContext);
     return (
         (()=>{
             if (nbr == 1){
-              if (context?.match)
-              return <GetDataHistory matches={context?.match} />;
+              return <GetDataHistory  />;
             }
             else if (nbr == 2){
               return <GetDataAchievement />

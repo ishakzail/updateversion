@@ -7,6 +7,8 @@ const { log } = console;
 import { MatterJsModules } from '../utils/MatterJsModules'
 import { MyContext } from '@/components/Context';
 import { io } from "socket.io-client"
+import Barl from "@/components/Barl";
+import NavBar from "@/components/NavBar";
 
 import { ModalGame } from '@/components/Modal';
 
@@ -95,6 +97,7 @@ export default function Game() {
 
     window.addEventListener('resize', handleResize);
 
+
     return () => {
       window.removeEventListener('resize', handleResize); // Clean up the event listener
     };
@@ -104,13 +107,13 @@ export default function Game() {
 
   }, [height])
 
- 
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setJoinRoom("go")
       const { room, queue } = router.query;
-    log("this is the query", room, queue)
-      if (room && queue){
+      log("this is the query", room, queue)
+      if (room && queue) {
         const openQueue = queue === "true" ? true : false
         const MatterNode = new MatterJsModules(`${room}`, openQueue, context?.socket)
         setMatterjsInstance(MatterNode)
@@ -130,7 +133,7 @@ export default function Game() {
       // Clean up the timeout when the component unmounts or the effect re-runs
       clearTimeout(timeoutId);
     };
-  
+
   }, [context?.socket, router.query]); // Empty dependency array to run the effect only once
 
 
@@ -150,19 +153,16 @@ export default function Game() {
 
   }, [restart])
 
-  useEffect(()=>{
+  useEffect(() => {
     if (!winner.length)
       setIsModalOpen(!gameStatus);
-  },[gameStatus])
+  }, [gameStatus])
 
 
   const deletThis = () => {
     setIsModalOpen(true);
 
   }
-console.log("Game status", gameStatus)
-console.log("winner", winner)
-console.log("status", gameStatusMsg)
 
 
   return (
@@ -174,31 +174,39 @@ console.log("status", gameStatusMsg)
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
+        <div className="bg-gradient-to-t from-gray-100 to-gray-400 min-h-screen">
+          <div className="container w-full mx-auto h-screen min-h-[1024px] flex flex-row py-2 gap-2">
+            <Barl page="Game" />
+            <div className="w-full h-full relative rounded-2xl flex flex-col  gap-2 ">
+              <NavBar page="Game" />
 
-        {isModalOpen && <ModalGame isOpen={isModalOpen} closeModal={closeModal} title={gameStatus ?  "WINNER": ""} msg={gameStatus ? winner : gameStatusMsg} color='bg-white' />}
-        {
-          <div className="relative flex justify-center items-center flex-col">
-            <div className="relative h-[50px] w-[375px] flex items-center  bg-[#a22d2d]">
-              <div className='absolute left-5 flex flex-col items-center justify-center'>
-                <span className="text-white font-semibold"> player1 </span>
-                <span className="text-white"> {score.left}</span>
-              </div>
-              <div className='absolute right-5 flex flex-col items-center justify-center'>
-                <span className="text-white font-semibold"> player2 </span>
-                <span className="text-white">{score.right}</span>
-              </div>
+              {isModalOpen && <ModalGame isOpen={isModalOpen} closeModal={closeModal} title={gameStatus ? "WINNER" : ""} msg={gameStatus ? winner : gameStatusMsg} color='bg-white' />}
+              {
+                <div className="relative flex justify-center items-center flex-col">
+                  <div className="relative h-[50px] w-[375px] rounded-t flex items-center border-double border-4 border-black  bg-[#9575DE]">
+                    <div className='absolute left-5 flex flex-col items-center justify-center'>
+                      <span className="text-white font-semibold"> player1 </span>
+                      <span className="text-white"> {score.left}</span>
+                    </div>
+                    <div className='absolute right-5 flex flex-col items-center justify-center'>
+                      <span className="text-white font-semibold"> player2 </span>
+                      <span className="text-white">{score.right}</span>
+                    </div>
+                  </div>
+                  <div id="matter-Container" style={divStyle} className={` border-8 border-black rounded w-full max-w-[623px] bg-[#ADE4DB] ${!joinRoom && "hidden"}`}>  </div>
+                  {
+                    countDown <= 4 &&
+                    <div className="absolute text-white text-xl "
+                      style={{ animationName: 'fadeout, growup', animationDuration: '1s', animationIterationCount: `${animations}` }}>
+                      {countDown == 4 ? 'GO' : countDown}
+                    </div>
+                  }
+
+                </div>
+              }
             </div>
-            <div id="matter-Container" style={divStyle} className={` w-full max-w-[623px] bg-white ${!joinRoom && "hidden"}`}>  </div>
-            {
-              countDown <= 4 &&
-              <div className="absolute text-white text-xl "
-                style={{ animationName: 'fadeout, growup', animationDuration: '1s', animationIterationCount: `${animations}` }}>
-                {countDown == 4 ? 'GO' : countDown}
-              </div>
-            }
-
           </div>
-        }
+        </div>
       </main>
     </>
   )

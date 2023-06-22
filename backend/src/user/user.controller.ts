@@ -53,7 +53,6 @@ constructor(private readonly userSrevice:UserService, private readonly achieveme
             response.status(400).json(error);
         }
     }
-    
     // get user
     @UseGuards(AuthGuard('jwt'))
     @Post('find')
@@ -66,15 +65,12 @@ constructor(private readonly userSrevice:UserService, private readonly achieveme
             response.status(400).json(e);
         }
     }
-    
     // search for user or channel  !!!!!!!!!!!!!   localhost:5000/user/search   {search:string} 
     @UseGuards(AuthGuard('jwt'))
     @Post('search')
-    async findUserOrChannel(@Req() req:any,@Body() dto:findUserOrChannel, @Res() response:Response){
+    async findUserOrChannel(@Body() dto:findUserOrChannel, @Res() response:Response){
         try{
-            const { login} = req.user;
-            const user = await this.userSrevice.findUser({login:login});
-            const result = await this.userSrevice.findUserOrChannel(dto, login);
+            const result = await this.userSrevice.findUserOrChannel(dto);
             response.status(200).json(result);
         }
         catch(e){
@@ -212,6 +208,7 @@ constructor(private readonly userSrevice:UserService, private readonly achieveme
         }
     }
 
+
     @UseGuards(AuthGuard('jwt'))
     @Post('acheivement')
     async getAchievement(@Body() dto:findUserDto, @Res() response:Response){
@@ -224,25 +221,25 @@ constructor(private readonly userSrevice:UserService, private readonly achieveme
         }
     }
 
-    // get achievement by id
-    @UseGuards(AuthGuard('jwt'))
-    @Post('achievement/:id')
-    async storeachiev(@Param('id') id:number, @Res() response:Response){
-        try {
-            const result = await  this.achievements.getAchievementById(id);
-            response.status(200).json(result);
-        }   
-        catch(error){
-            response.status(400).json(error);
+        // get achievement by id
+        @UseGuards(AuthGuard('jwt'))
+        @Post('achievement/:id')
+        async storeachiev(@Param('id') id:number, @Res() response:Response){
+            try {
+                const result = await  this.achievements.getAchievementById(id);
+                response.status(200).json(result);
+            }   
+            catch(error){
+                response.status(400).json(error);
+            }
         }
-    }
-
-    //get all achievement
-    @UseGuards(AuthGuard('jwt'))
-    @Get('achievements')
-    async getAllAchievements(){
-        return this.achievements.getData();
-    }
+        
+        //get all achievement
+        @UseGuards(AuthGuard('jwt'))
+        @Get('achievements')
+        async getAllAchievements(){
+            return this.achievements.getData();
+        }
 
 
 

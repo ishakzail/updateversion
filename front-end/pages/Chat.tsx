@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import ChatHistory from "@/components/ChatHistory";
 import Link from "next/link";
@@ -18,6 +17,7 @@ import createSocketConnection from "@/components/socketConnection";
 import { useRouter } from "next/router";
 import ChannelHistor from "@/components/ChannelHistory";
 import History from "@/components/HIstory";
+import { ModalInvite } from "@/components/Modal";
 
 export default function Chat() {
   const context = useContext(MyContext);
@@ -26,8 +26,28 @@ export default function Chat() {
   const [id, setId] = useState("");
   const [chatHistory, setChatHistory] = useState<MesgType[] | any>([]);
   const [show, setShow] = useState("block");
+  const [gameRoom, setGameRoom] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  async function handleContactClick(login: string, Channel: boolean) {
+  useEffect(()=>{
+    if (context?.socket){
+
+      context.socket.on('gameInvitation', (payload: any) => {
+        
+        console.log("game invite response ")
+        if (payload && payload.sender) {
+          setGameRoom(payload.sender)
+          setIsModalOpen(true)
+          
+        }
+        console.log(payload)
+      });
+    }
+    })
+    const closeModal = () => {
+      setIsModalOpen(false);
+    };
+    async function handleContactClick(login: string, Channel: boolean) {
     
 
     if (Channel){
@@ -79,6 +99,8 @@ export default function Chat() {
 
   return (
     <div className="bg-gradient-to-t from-gray-100 to-gray-400 min-h-screen">
+       {isModalOpen && <ModalInvite isOpen={isModalOpen} closeModal={closeModal} title="Invitation to Game" msg={`you've been invited to join a game against ${gameRoom}`} color={gameRoom}  />}
+
       <div className="container w-full mx-auto h-screen min-h-[1024px] flex flex-row py-2 gap-2">
         <Barl page="Chat" />
         <div className="w-full h-full rounded-2xl flex flex-col  gap-2 ">

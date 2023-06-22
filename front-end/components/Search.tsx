@@ -1,6 +1,6 @@
 import axios, {AxiosError} from "axios";
 import { headers } from "next/dist/client/components/headers";
-import React, {useContext, useEffect, useState} from "react";
+import React, {useContext, useState} from "react";
 import { MyContext } from "./Context";
 import {ModalSearch} from "./Modal";
 import { dataProp } from "./Modal";
@@ -26,9 +26,8 @@ const Search = ({page } : {page : string})=>{
                     }
                 }
                 )
-                context?.setUserSearch(res.data[0].userSearch);
-                context?.setChannelSearch(res.data[1].channelSearch);
-                console.log(res.data[1].channelSearch)
+                console.log('this is search ', res.data)
+                setData(res.data);
             }catch (err : any){
                 console.log('not found')
             }
@@ -45,26 +44,10 @@ const closeModale = () =>{
     setIsOpen(false)
   }
 
-  useEffect(() =>{
-    if (context?.socket){
-        context?.socket.on('join', (pay)=>{
-            if (pay){
-                console.log(pay);
-                context.setChannels((prev) =>[...prev, {avatar : pay.avatar, channelName: pay.channelName}]);
-            }
-        })
-        context.socket.on('errorJoin' , (pay) =>{
-            if (pay)
-                console.log(pay)
-        })
-    }
-
-  },[context?.socket])
-
   
   return (
 <div className="container relative left-0 z-50 flex w-3/4 h-auto md:h-full ">
-    {isOpen && <ModalSearch isOpen={isOpen} closeModal={closeModale}   />}
+    {isOpen && <ModalSearch isOpen={isOpen} closeModal={closeModale} data={data}  />}
                             <div className="relative flex items-center w-full h-20 lg:w-64 group">
                                 <div className="absolute z-50 flex items-center justify-center  w-auto h-10 p-3 pr-2 text-sm text-gray-500 uppercase cursor-pointer sm:hidden">
                                     <svg fill="none" className="relative w-5 h-5" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" stroke="currentColor" viewBox="0 0 24 24">

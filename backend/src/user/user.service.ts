@@ -38,45 +38,80 @@ export class UserService {
         return await this.prisma.client.user.findUnique({where:{UserId:id}});
     }
 
-    async findUserOrChannel(dto:findUserOrChannel, userLogin:string){
-        let result:any[] = [];
-        let users = await this.prisma.client.user.findMany({
-            where: {
-                NOT: {
-                    login: userLogin,
-                  },
-                OR: [
-                {
-                  login: {
-                    contains: dto.search.toLowerCase(),
-                    mode: 'insensitive',
-                  },
-                },
-                {
-                  username: {
-                    contains: dto.search.toLowerCase(),
-                    mode: 'insensitive',
-                  },
-                },
-              ],
-            },
-        });
-        for(let i = 0;i < users.length ; ++i){
-            if (await this.isRealFriend(users[i].login, userLogin))
-                users.splice(i, 1); // remove that user from list search cause he is a friemd of 
-        }
-        result.push({userSearch:users});
-        const channel = await this.prisma.client.channel.findMany({
+    // async findUserOrChannel(dto:findUserOrChannel){
+    //     let result:any[] = [];
+    //     let user = await this.prisma.client.user.findMany({
+    //         where:{
+    //             login:{
+    //                 contains: dto.search.toLowerCase(),
+    //                 mode: 'insensitive',
+    //             }
+    //         }});
+    //     if (user)
+    //         result.push({userSearch:user});
+    //     else
+    //     {
+    //         let user = await this.prisma.client.user.findMany({
+    //             where:{
+    //                 username: {
+    //                     contains: dto.search.toLowerCase(),
+    //                     mode: 'insensitive',
+    //                 },
+    //             },
+    //         });
+    //         if (user)
+    //             result.push({userSearch:user});
+    //     }
+    //     const channel = await this.prisma.client.channel.findMany({
+    //         where:{
+    //             channelName:{
+    //                 contains: dto.search.toLowerCase(),
+    //                 mode: 'insensitive',
+    //             }
+    //         }
+    //     });
+    //     if (channel)
+    //         result.push({channelSearch:channel});
+    //     if (result.length == 0)
+    //         throw new BadRequestException(`no username or a channelName with : ${dto.search}`);
+    //     return result;
+    // }
+    async findUserOrChannel(dto:findUserOrChannel){
+        let user = await this.prisma.client.user.findFirst({
             where:{
-                channelName:{
+                login:{
                     contains: dto.search.toLowerCase(),
                     mode: 'insensitive',
                 }
-            }
-        });
-        result.push({channelSearch:channel});
-        return result;
+            }});
+        if (user)
+            return  {...user,itsUser:true};
+        if (!user)
+        {
+            let user = await this.prisma.client.user.findFirst({
+                where:{
+                    username: {
+                        contains: dto.search.toLowerCase(),
+                        mode: 'insensitive',
+                    },
+                },
+            });
+            if (user)
+                return  {...user,itsUser:true};
+            const channel = await this.prisma.client.channel.findFirst({
+                where:{
+                    channelName:{
+                        contains: dto.search.toLowerCase(),
+                        mode: 'insensitive',
+                    }
+                }
+            });
+            if (channel)
+                return {...channel,itsUser:false};
+        }
+        throw new BadRequestException(`no username or a channelName with : ${dto.search}`);
     }
+
     async createUser(loginDto:LoginDto){
         const user =  await this.prisma.client.user.create({
             data:{
@@ -194,16 +229,6 @@ export class UserService {
         });
     }
 
-    async isRealFriend(loginA:string, loginB:string){
-        let friend = await this.IsfriendOf(loginA, loginB);
-        if (friend && friend.isFriends)
-            return true;
-        friend = await this.IsfriendOf(loginB, loginA)
-        if (friend && friend.isFriends)
-            return true;
-        return false;
-    }
-
     // invitations
     async inviteFriend(dto:invitationDto){
         const {senderLogin, receiverLogin} = dto;
@@ -272,7 +297,6 @@ export class UserService {
         else
             throw new BadRequestException(`${senderLogin} had not invite ${receiverLogin}`);
     }
-
     async accepteFriend(dto:invitationDto, accepte:boolean){
         const {senderLogin, receiverLogin} = dto;
         const sender = await this.findUser({login:senderLogin});
@@ -312,16 +336,6 @@ export class UserService {
         const frienda = await this.IsfriendOf(loginA, loginB);
         if (frienda && frienda.isFriends)
             throw new BadRequestException(`${loginA} and ${loginB} is already friends!`);
-        if (frienda && !frienda.isFriends){
-            return await this.prisma.client.friend.update({
-                where:{
-                    FriendshipId:frienda.FriendshipId,
-                },
-                data:{
-                    isFriends:true,
-                }
-            });
-        }
         // if userA friendOf userB  
         const friend = await this.IsfriendOf(loginB, loginA);
         if (friend)
@@ -861,7 +875,7 @@ export class UserService {
             if (matchsA[i].winner)
                 win++;
             const {scoreA, scoreB,winner, finishedAt} = matchsA[i];
-            result.push({loginA:user.login,avatarA:user.avatar, usernameA:user.username, loginB:otherUser.login, avatarB:otherUser.avatar, usernameB:otherUser.username, winner:winner,scoreA:scoreA,scoreB:scoreB, finishedAt:finishedAt});
+            result.push({loginA:user.login, loginB:otherUser.login, winner:winner,scoreA:scoreA,scoreB:scoreB, finishedAt:finishedAt, avatar:otherUser.avatar, username:otherUser.username});
         }
         const matchsB =  await this.prisma.client.match.findMany({
             where:{
@@ -873,7 +887,7 @@ export class UserService {
             if (matchsB[i].winner)
                 win++;
             const {scoreA, scoreB,winner, finishedAt} = matchsB[i];
-            result.push({loginA:user.login, avatarA:user.avatar, usernameA:user.username, loginB:otherUser.login, avatarB:otherUser.avatar, usernameB:otherUser.username, winner:winner,scoreA:scoreA,scoreB:scoreB, finishedAt:finishedAt});
+            result.push({loginA:user.login, loginB:otherUser.login, winner:winner,scoreA:scoreA,scoreB:scoreB, finishedAt:finishedAt, avatar:otherUser.avatar, username:otherUser.username});
         }
         const lose = result.length - win;
         const pWin =  win / result.length * 100;
@@ -904,6 +918,7 @@ export class UserService {
         return {...matchsA, ...matchsB};
     }
 
+
     async  getLeaderboard() {
         let leaderboard = await this.prisma.client.user.findMany({
             select:{
@@ -924,4 +939,7 @@ export class UserService {
           });
         return leaderboard;
     }
+
+
+
 }

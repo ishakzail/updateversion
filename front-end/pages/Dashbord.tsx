@@ -9,7 +9,7 @@ import { faTableTennisPaddleBall } from '@fortawesome/free-solid-svg-icons';
 import {DataFunction, CallBarLeft} from '@/components/Functions';
 import NavBar from '@/components/NavBar';
 import { MyContext , ContextTypes} from '@/components/Context';
-import Modal from '@/components/Modal';
+import Modal, { ModalInvite } from '@/components/Modal';
 import axios from 'axios';
 import {io} from "socket.io-client";
 import createSocketConnection from '@/components/socketConnection'
@@ -32,13 +32,14 @@ export default function Progress() {
   const router = useRouter();
   const [mms, setMesg] = useState('');
   const [name, setName] = useState('');
+  const [gameRoom, setGameRoom] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
 
   
 
   useEffect(() =>{
     context?.setSocket(createSocketConnection(context?.token))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   },[context?.token])
   
   if (context?.socket){
@@ -46,7 +47,6 @@ export default function Progress() {
       console.log(paylo);
     })
   }
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -72,7 +72,21 @@ export default function Progress() {
       prev.filter(friend => friend.login !== login)
     );
   };
+  useEffect(()=>{
+    if (context?.socket){
 
+      context.socket.on('gameInvitation', (payload: any) => {
+        
+        console.log("game invite response ")
+        if (payload && payload.sender) {
+          setGameRoom(payload.sender)
+          setIsModalOpen(true)
+          
+        }
+        console.log(payload)
+      });
+    }
+    })
   useEffect(() => {
     if (context?.socket) {
       context.socket.on('PrivateMessage', (payload: any) => {
@@ -146,7 +160,6 @@ export default function Progress() {
         context.socket.off('cancelInvitation');
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context?.socket]);
   
   
@@ -295,6 +308,7 @@ export default function Progress() {
   return (
     <div className='bg-gradient-to-t from-gray-100 to-gray-400 min-h-screen ' >
       <div className='flex flex-col container mx-auto h-screen min-h-[1100px] py-2 gap-3  '>
+       {isModalOpen && <ModalInvite isOpen={isModalOpen} closeModal={closeModal} title="Invitation to Game" msg={`you've been invited to join a game against ${gameRoom}`} color={gameRoom}  />}
       {isModalOpen && <Modal isOpen={isModalOpen} closeModal={closeModal} title={name} msg={mms} color="bg-white"/>}
       <div className=' h-1/2 flex md:space-x-2'>
         <div className="hidden md:flex md:flex-col min-w-[130px]  md:w-[15%]  bg-gray-200 shadow-2xl shadow-gray-200  rounded-2xl dark:bg-gray-700 pt-4   ">

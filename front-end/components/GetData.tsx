@@ -27,8 +27,7 @@ const getImgSrc = (name : string)  =>{
 
 
 
-export default function GetDataHistory({matches } : {matches : MatchType[]}){
-  console.log('this is matches ', matches)
+export default function GetDataHistory(){
   const [Img, setImg] = useState<string | StaticImageData>('');
     const context = useContext(MyContext);
     const TreatImage = (img : string)=>{
@@ -58,14 +57,6 @@ export default function GetDataHistory({matches } : {matches : MatchType[]}){
         // and here for setting the tade to usestate data
         console.log('data');
     })
-
-    const GetImage = ({name } : {name : string}) =>{
-      if (name === '0')
-        return <Image className="mask mask-squircle w-12 h-12" src={avatar} alt="avatar" /> 
-      else
-        return <img className="mask mask-squircle w-12 h-12" src={name} alt="avatar"/>
-
-    }
         if (context?.match.length == 0){
             return (
                 <p className=' text-center text-4xl mx-auto my-auto text-slate-700 font-semibold font-mono'>
@@ -81,23 +72,34 @@ export default function GetDataHistory({matches } : {matches : MatchType[]}){
               {(() => {
                 const elements = [];
                 let i = 0;
-                while (matches[i]) {
+                while (context?.match[i]) {
                   elements.push(
                     <div className="flex flex-row min-h-[60px] h-[14%]  mt-2 justify-center space-x-3 md:justify-between items-center bg-gray-300 md:space-x-2 lg:space-x-6 md:px-10 lg:px-32 rounded-lg">
                         <div className="flex  md:space-x-10  w-1/3 h-full items-center">
-                        <GetImage name={matches[i].avatarA} />
-                            <div className="font-mono font-semibold md:text-[20px]">{matches[i].usernameA}</div>
+                            
+                            {
+                              (() =>{
+                                const elements = [];
+                                elements.push(
+                                  typeof(Img) === "string" ? <img className="w-12 h-12 mask mask-squircle" src={Img} alt='av'  /> : <Image src={Img} alt='av' width={300} height={300} />
+                                )
+                                return elements;
+                              })()
+                            }
+
+                           
+                            <div className="font-mono font-semibold md:text-[20px]">{context?.name}</div>
                         </div>
                         <div className="flex w-1/5 md:w-[90px]    h-full items-center justify-between md:justify-center md:space-x-6 ">
-                            <div className={`font-bold text-lg ${matches[i].scoreB > matches[i].scoreA ? 'text-red-500' : 'text-green-600' }`}>{matches[i].scoreA}</div>
+                            <div className={`font-bold text-lg ${context.match[i].scoreB > context.match[i].scoreA ? 'text-red-500' : 'text-green-600' }`}>{context.match[i].scoreA}</div>
                             <div className="font-bold md:text-xl  md:uppercase">vs</div>
-                            <div className={`font-bold text-lg ${matches[i].scoreA > matches[i].scoreB ? 'text-red-500' : 'text-green-600' } `}>{matches[i].scoreB}</div>
+                            <div className={`font-bold text-lg ${context.match[i].scoreA > context.match[i].scoreB ? 'text-red-500' : 'text-green-600' } `}>{context.match[i].scoreB}</div>
 
                         </div>
                         <div className="flex justify-around md:justify-between md:space-x-10  w-1/3 h-full items-center ">
-                            <div className="font-mono font-semibold md:text-[20px]">{matches[i].usernameB}</div>
+                            <div className="font-mono font-semibold md:text-[20px]">{context?.match[i].username}</div>
                             <div>
-                              <GetImage name={matches[i].avatarB} />
+                            <Image className="mask mask-squircle w-12 h-12" src={smia} alt="avatar" />
 
                             </div>
                         </div>

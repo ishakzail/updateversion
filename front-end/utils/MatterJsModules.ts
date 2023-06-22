@@ -440,6 +440,10 @@ export class MatterJsModules {
             const {msg} = data
             setGameStatusMsg(msg);
         });
+        this.socket?.on('cancelGame', (data) => {
+            const {msg} = data
+            setGameStatusMsg( `${`${msg} canceled the invitation, fuck off`}`);
+        });
     }
 
 }

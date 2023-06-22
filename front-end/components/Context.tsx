@@ -4,7 +4,6 @@ import avatar from '../image/avatar.webp';
 import { Socket } from "socket.io-client";
 
 
-
 // define types context
 const r : File | string = '';
 
@@ -14,24 +13,9 @@ export interface MatchType {
   loginB: string;
   scoreA: number;
   scoreB: number;
-  usernameA: string;
-  usernameB : string;
-  winner: boolean;
-  avatarA : string;
-  avatarB: string;
-}
-
-export interface userSearchProps{
-  avatar : string;
-  login : string;
   username: string;
-}
-export interface channelSearchProps{
-  avatar : string;
-  channelName:string;
-  isPrivate : boolean;
-  ispassword : boolean;
-  password : string;
+  winner: boolean;
+  avatar: string;
 }
 
 export interface InfoChannelProp{
@@ -108,22 +92,10 @@ export interface FriendType{
   avatar : string;
 }
 
-export interface profileType{
-  username: string;
-  avatar: string;
-  matches : MatchType[];
-}
-
 
 export interface ContextTypes{
 
   pendingInvitation : FriendType[];
-  userSearch : userSearchProps[];
-  setUserSearch : Dispatch<SetStateAction<userSearchProps[]>>;
-  channelSearch : channelSearchProps[];
-  setChannelSearch : Dispatch<SetStateAction<channelSearchProps[]>>;
-  profile : profileType | undefined;
-  setProfile : Dispatch<SetStateAction<profileType | undefined>>;
   setPendingInvitation : Dispatch<SetStateAction<FriendType[]>> // this is for pendining invitation to accept another (waitToAccept);
   waitToAccept : FriendType[]; // this is for waiting to another to accept you (pendingInvitation);
   setWaitToAccept : Dispatch<SetStateAction<FriendType[]>>;
@@ -190,9 +162,6 @@ const MyContext = createContext<ContextTypes | undefined>(undefined);
 // create provider
 
 const MyContextProvider = ({children} : ChildProps) =>{
-  const [profile, setProfile] = useState<profileType | undefined>(undefined)
-  const [userSearch, setUserSearch] = useState<userSearchProps[]>([]);
-  const [channelSearch, setChannelSearch] = useState<channelSearchProps[]>([]);
   const [blackList, setBlackList] = useState<FriendType[]>([])
   const [waitToAccept, setWaitToAccept] = useState<FriendType[]>([])
   const [pendingInvitation, setPendingInvitation] = useState<FriendType[]>([]);
@@ -224,14 +193,6 @@ const MyContextProvider = ({children} : ChildProps) =>{
       // load data from localstorage
       useEffect(()=>{
         const getname = localStorage.getItem('name');
-        const GetUserSearch = localStorage.getItem('userSearch');
-if (GetUserSearch !== undefined && GetUserSearch !== null && GetUserSearch !== "undefined") {
-  setUserSearch(JSON.parse(GetUserSearch));
-} else {
-  // Handle the case when the value is not set, is null, or is "undefined"
-}
-
-        
         const getimg = localStorage.getItem('img');
         const getfriends = localStorage.getItem('friends');
         const getlevel = localStorage.getItem('level');
@@ -250,14 +211,6 @@ if (GetUserSearch !== undefined && GetUserSearch !== null && GetUserSearch !== "
         const GetClickCha = localStorage.getItem('clickChannel');
         const GetWaitAccept = localStorage.getItem('waitAccept');
         const GetBlock = localStorage.getItem('blocked');
-        const GetChannelSearch = localStorage.getItem('channelSearch');
-        // const GetProfile = localStorage.getItem('profil');
-        // if (GetProfile !== undefined && GetProfile !== null){
-          //   setProfile(JSON.parse(GetProfile));
-          // }
-          if (GetChannelSearch !== undefined && GetChannelSearch != null && GetChannelSearch !== "undefined"){
-            setChannelSearch(JSON.parse(GetChannelSearch));
-          }
         if (GetBlock!== undefined && GetBlock!== null) {
           setBlackList(JSON.parse(GetBlock));
         }
@@ -397,15 +350,6 @@ if (GetUserSearch !== undefined && GetUserSearch !== null && GetUserSearch !== "
   useEffect(() =>{
     localStorage.setItem('blocked', JSON.stringify(blackList));
   },[blackList])
-  useEffect(() =>{
-    localStorage.setItem('profil', JSON.stringify(profile));
-  },[profile])
-  useEffect(() =>{
-    localStorage.setItem('userSearch', JSON.stringify(userSearch));
-  },[userSearch])
-  useEffect(() =>{
-    localStorage.setItem('channelSearch', JSON.stringify(channelSearch));
-  },[channelSearch]);
   // useEffect(() =>{
   //   localStorage.setItem('message', JSON.stringify(Message));
 
@@ -413,13 +357,13 @@ if (GetUserSearch !== undefined && GetUserSearch !== null && GetUserSearch !== "
  
     const ContextValue = {name, setName, img, setImg, friends, setFriends,wins, setWins, losses, 
       setLosses,  level, setLevel,LevlPer,setLevlPer,login, setLogin, checkname, setCheckname,socket,setSocket, chatHistory,setChatHistory,showMsg, setShowMsg, check, setCheck, match, setMatch
-      ,token, setToken, MessageContent,userSearch, setUserSearch,channelSearch, setChannelSearch, waitToAccept, pendingInvitation, setPendingInvitation, setWaitToAccept, channelInfo, Channels,setClickChannel, setChannelInfo,clickChat, setClickChat, clickChannel, setChannels, setMessageContent,contactChat, enableTwoFa, setEnableTwofa, setContactChat, MessageInfo, setMessageInfo , chn, setChn}
+      ,token, setToken, MessageContent, waitToAccept, pendingInvitation, setPendingInvitation, setWaitToAccept, channelInfo, Channels,setClickChannel, setChannelInfo,clickChat, setClickChat, clickChannel, setChannels, setMessageContent,contactChat, enableTwoFa, setEnableTwofa, setContactChat, MessageInfo, setMessageInfo , chn, setChn}
 
 
     return (
         <MyContext.Provider value={{name, setName, img, setImg, friends, setFriends,wins, setWins, losses, 
           setLosses,  level, setLevel,LevlPer,setLevlPer,login, setLogin, checkname, setCheckname,socket,setSocket, chatHistory,setChatHistory,showMsg, setShowMsg, check, setCheck, match, setMatch
-          ,token, setToken,blackList, setBlackList, userSearch, setUserSearch,channelSearch, setChannelSearch,MessageContent, waitToAccept,profile, setProfile, pendingInvitation, setPendingInvitation, setWaitToAccept, channelInfo, Channels,setClickChannel, setChannelInfo,clickChat, setClickChat, clickChannel, setChannels, setMessageContent,contactChat, enableTwoFa, setEnableTwofa, setContactChat, MessageInfo, setMessageInfo , chn, setChn}
+          ,token, setToken,blackList, setBlackList, MessageContent, waitToAccept, pendingInvitation, setPendingInvitation, setWaitToAccept, channelInfo, Channels,setClickChannel, setChannelInfo,clickChat, setClickChat, clickChannel, setChannels, setMessageContent,contactChat, enableTwoFa, setEnableTwofa, setContactChat, MessageInfo, setMessageInfo , chn, setChn}
     }>
             {children}
         </MyContext.Provider>

@@ -16,6 +16,7 @@ import { element } from "prop-types";
 import Notification from './Notification'
 import { Stack } from "@mui/material";
 import { useRouter } from 'next/router';
+import Router from "next/router";
 
 import ChannelHistor from "./ChannelHistory";
 import { ModalInvite } from '@/components/Modal';
@@ -222,6 +223,7 @@ useEffect(() => {
 //   </div>
 // )
 const [hidden, setHidden] = useState('hidden');
+  const router = Router;
 
 const clickPro = (): void => {
   if (hidden === 'hidden')
@@ -231,12 +233,13 @@ const clickPro = (): void => {
 }
 const handleGameInvite = () => {
   if (context?.socket) {
-    const url = `/Game?room=${context.login}&queue=false`;
+    const url = `Game?room=${context.login}&queue=false`;
     console.log("emiting invite")
     context.socket.emit('gameInvitation', {
       receiver: login,
     });
-    window.open(url, '_blank');
+    router.push(`http://localhost:3000/${url}`)
+    
   }
 }
 

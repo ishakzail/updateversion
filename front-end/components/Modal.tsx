@@ -1,11 +1,10 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { MyContext, channelSearchProps } from "./Context";
+import { MyContext } from "./Context";
 import {Star} from 'react-feather'
 import Avatar from '../image/avatar.webp'
 import Image, { StaticImageData } from "next/image";
 import { FriendType } from "./Context";
-import { userSearchProps } from "./Context";
-
+import Router from "next/router";
 
 interface ModalProps {
   isOpen: boolean;
@@ -17,9 +16,6 @@ interface ModalProps {
 }
 import  { ReactNode } from 'react';
 import axios from "axios";
-import { faBars } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { send } from "process";
 
 
 
@@ -574,73 +570,12 @@ export interface dataProp{
   lvl: number
 }
 
-interface ModaleJoin{
-  isOpen : boolean;
-  closeModal : () => void;
-  closeModalSearch : () => void;
-  channel : channelSearchProps;
-}
-
-const ModalJoin = (props : ModaleJoin) =>{
-  const context = useContext(MyContext);
-  const value = useRef<HTMLInputElement | null>(null);
-  if (!props.isOpen) {
-    return null; // If isOpen is false, don't render the modal
-  }
-  const Res = () =>{
-    if (props.channel.ispassword){
-      return(
-        <div>
-          <p>this channel with pass</p>
-          <input type="password" name="" id="" ref={value} />
-          <button onClick={()=>{
-            if (value.current){
-              console.log(value.current.value , 'this is the pass')
-      context?.socket?.emit('joinChannel', {channelName : props.channel.channelName, password: value.current.value})
-
-            }
-
-          }}>join</button>
-        </div>
-      );
-    }
-    else{
-      context?.socket?.emit('joinChannel', {channelName : props.channel.channelName})
-
-      return (
-        <div>your are joined</div>
-      );
-    }
-  } 
-  
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50  ">
-
-        <div className={`bg-white p-6 rounded-md w-60 h-60  flex flex-col gap-1`}>
-          <div className="w-full h-full">
-            <div className="w-full h-[80%]">
-            <Res />
-            </div>
-            <div className="w-full h-[10%] flex justify-end items-center">
-        <button onClick={props.closeModal} className="bg-slate-400 px-2 py-1 rounded-xl border-2 border-slate-700 text-white font-semibold">close</button>
-
-            </div>
-          </div>
-        
-        </div>
-        </div>
-
-    );
-  }
-
-
 interface ModalSearchProps{
   isOpen : boolean;
   closeModal : () => void;
- 
+  data : dataProp | undefined;
 
 }
-
 
 
 
@@ -669,27 +604,27 @@ const ModalSearch= (props : ModalSearchProps) => {
   }
  
 
-  const sendInvite = (user : userSearchProps) =>{
+  const sendInvite = () =>{
 
-    if (user.login){
+    if (props.data?.login){
       context?.socket?.emit('inviteFriend',{
-        login : user.login,
+        login : props.data.login,
       })
-      // if (user)
+      // if (props.data)
       
       const friend : FriendType = {
-        login : user.login,
-        username : user.username,
-        avatar : user.avatar,
+        login : props.data.login,
+        username : props.data.username,
+        avatar : props.data.avatar,
       }
-      removeChat(user.login)
+      removeChat(props.data.login)
       context?.setWaitToAccept((prev)=>[...prev, friend])
 
       // when i add this
     }
     props.closeModal()
     context?.setChn(true);
-    console.log(user.login);
+    console.log(props.data?.login);
   }
 
 
@@ -705,126 +640,44 @@ const ModalSearch= (props : ModalSearchProps) => {
       })
     }
   }, [context?.socket])
-  const [name, setName] = useState('');
-  const [login, setLogin] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [openModalJoin, setOpenModalJoin] = useState(false);
-
-  const openModaleJoin = () =>{
-    setOpenModalJoin(true);
-  }
-  const closeModalJoin = () =>{
-    setOpenModalJoin(false);
-  }
-
-  const sendMsg = (login : string, username : string, )=>{
-     
-    setName(username);
-    setLogin(login);
-      setIsModalOpen(true);
-
-  }
-  const openModal = () =>{
-    setIsModalOpen(true);
-  }
-  const closeModal = () =>{
-    setIsModalOpen(false);
-  }
-  interface PropsClickJoin {
-    channel : channelSearchProps;
-    closeModal : () => void;
-  }
-  const clickJoin = (channel : channelSearchProps) =>{
-    console.log('click')
-    setChannel(channel);
-    // props.closeModal();
-    openModaleJoin();
-  }
-  const [channel , setChannel] = useState<channelSearchProps>()
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50  ">
-      <ModalChat  isOpen={isModalOpen} closeModal={closeModal} name={name} login={login}/>
-      { channel && <ModalJoin isOpen={openModalJoin} closeModal={closeModalJoin} channel={channel} closeModalSearch={props.closeModal} />}
-
-      <div className={`bg-white p-6 rounded-md w-[700px] h-[700px] flex flex-col gap-1`}>
-        <div className="w-full h-[5%]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ">
+      <div className={`bg-white p-6 rounded-md`}>
         <h2 className="text-2xl font-bold mb-4 text-center">Search</h2>
-        </div>
-        {/* this for users */}
-        <div className="w-full h-[45%]   flex-col">
-          <div className="w-full h-[10%]">
-            <h1 className="font-mono  font-semibold border-b-2">Users</h1>
-          </div>
-          <div className="w-full h-[90%] flex flex-col gap-1 overflow-y-auto">
-          {
-            context?.userSearch && context.userSearch.map((user : userSearchProps) =>{
-              return (
-                <div className="w-full min-h-[60px] bg-slate-100 flex items-center rounded-xl justify-around">
-              <div className="avatar">
-              <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-              <GetAvatar avat={user.avatar} />
-
-              </div>
-              </div>
-              <div>
-                <p className="font-bold">{user.username}</p>
-              </div>
-              <div className="dropdown dropdown-end">
-                <button tabIndex={0}><FontAwesomeIcon icon={faBars} /></button>
-                <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                  <li><button onClick={() => sendInvite(user)}>Add Friend</button></li>
-                  <li><button onClick={() => sendMsg(user.login, user.username)}>Send Message</button></li>
-                </ul>
-              </div>
-            </div>
-              );
-            }) 
-          }
-          </div>
-        </div>
-        {/* this for channels */}
-        <div className="w-full h-[45%]   flex-col">
-          <div className="w-full h-[10%]">
-            <h1 className="font-mono  font-semibold border-b-2">Channels</h1>
-          </div>
-          <div className="w-full h-[90%] flex flex-col gap-1 overflow-y-auto">
-          {
-            context?.channelSearch && context.channelSearch.map((channel : channelSearchProps) =>{
-              return (
-                <div className="w-full min-h-[60px] bg-slate-100 flex items-center rounded-xl justify-around">
-              <div className="avatar">
-              <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-              <GetAvatar avat={channel.avatar} />
-
-              </div>
-              </div>
-              <div>
-                <p className="font-bold">{channel.channelName}</p>
-              </div>
-              <button onClick={()=> clickJoin(channel)} className=" hover:bg-blue-200 hover:text-black bg-slate-500 text-white px-3 py-1 rounded-2xl border-2 border-slate-300">Join</button>
-            </div>
-              );
-            }) 
-          }
-          </div>
-        </div>
-        <div className="w-full h-[5%] flex justify-end  items-center">
-        <button
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-          onClick={() =>{
-            props.closeModal()
-            context?.setChn(true);
-          }}
-        >
-          Close
-        </button>
-        </div>
-        
-        
-
+        <div className="flex  justify-center items-center gap-4 p-10">
           
+
+            <div className="avatar">
+        <div className="w-10 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+          <GetAvatar avat={props.data?.avatar} />
+        </div>
+      </div>
         
+      <div>{props.data?.username}</div>
+
+        </div>
+        
+        <div className="flex justify-end gap-4">
+          <button
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+            onClick={() =>{
+              props.closeModal()
+              context?.setChn(true);
+            }}
+          >
+            Close
+          </button>
+          <button
+            className="px-4 py-2 bg-blue-200 text-slate-500 rounded hover:bg-gray-300"
+            onClick={() =>{
+              sendInvite();
+              
+            }}
+          >
+            Connect
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -836,27 +689,31 @@ const ModalGame: React.FC<ModalProps> = ({ isOpen, closeModal, title, msg, color
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ">
+    <div className=" absolute inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ">
       <div className={`bg-[#7e22ce] p-6 rounded-md`}>
         {
-          title.length &&
-          <div className="flex justify-center gap-2">
+          title.length ? (
+
+            <div className="flex justify-center gap-2">
             <Star fill="gold" color='gold' />
             <Star className="pt-1" fill="gold" color='gold' />
             <Star fill="gold" color='gold' />
           </div>
+            ) : null
         }
         <h2 className="text-2xl text-white font-bold mt-6 text-center">{title}</h2>
-        <h2 className="text-2xl text-[#FFD700] font-bold mb-6 text-center">{msg}</h2>
+        <h2 className={`text-2xl ${ title.length ? `text-[#FFD700]` : `text-[#e9e8e2]`} font-bold mb-6 text-center`}>{msg}</h2>
         <div className="flex justify-end gap-2">
           {
-            title.length &&
-            <button
+            title.length ? (
+
+              <button
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
               onClick={closeModal}
-            >
+              >
               Replay
             </button>
+              ) : null
           }
           <button className="px-4 py-2 bg-red-200 text-gray-700 rounded hover:bg-red-300">Leave</button>
         </div>
@@ -865,10 +722,19 @@ const ModalGame: React.FC<ModalProps> = ({ isOpen, closeModal, title, msg, color
   );
 };
 const ModalInvite: React.FC<ModalProps> = ({ isOpen, closeModal, title, msg, color }) => {
-  const handleClick = () => {
-    const url = `/Game?room=${color}&queue=false`;
-    window.open(url, '_blank');
+  const router = Router;
+  const context = useContext(MyContext);
+  const handleAccept = () => {
+    const url = `Game?room=${color}&queue=false`;
+    router.push(`http://localhost:3000/${url}`)
+  }
 
+  const handleDecline = () => {
+    if(context?.socket)
+    context?.socket.emit("cancelGame", {
+      host: color
+    })
+    closeModal()
   }
   if (!isOpen) {
     return null; // If isOpen is false, don't render the modal
@@ -892,16 +758,16 @@ const ModalInvite: React.FC<ModalProps> = ({ isOpen, closeModal, title, msg, col
             title.length &&
             <button
               className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
-              onClick={handleClick}
+              onClick={handleAccept}
             >
               Accept
             </button>
           }
-          <button onClick={closeModal} className="px-4 py-2 bg-red-200 text-gray-700 rounded hover:bg-red-300">Decline</button>
+          <button onClick={handleDecline} className="px-4 py-2 bg-red-200 text-gray-700 rounded hover:bg-red-300">Decline</button>
         </div>
       </div>
     </div>
   );
 };
 export default Modal;
- export {ModalChat,ModalInvite, ModalCreateChannel, ModalUpdateChannel, ModalSearch, ModalGame, ModalJoin};
+ export {ModalChat,ModalInvite, ModalCreateChannel, ModalUpdateChannel, ModalSearch, ModalGame};
