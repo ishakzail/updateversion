@@ -70,6 +70,7 @@ export default function Profileid() {
   
           // Fetch data using the id
           const response = await fetchdata(token);
+          console.log("2f response is ", response.enableTwoFa)
           console.log('this is response ', response);
           context?.setToken(token);
           context?.setName(response.username);
@@ -84,15 +85,16 @@ export default function Profileid() {
         console.log('this is wating to accept ', context?.waitToAccept);
 
         context?.setMatch(response.matches);
+        console.log("well the 2f is actually", context?.enableTwoFa)
+        if (response.enableTwoFa)
+        router.push('http://localhost:3000/QrCode');
+      else
+        router.push('http://localhost:3000/Dashbord');
+        // response.enableTwoFa
         }
       };
   
-      fetchTokenAndConnectSocket();
-      if (context?.enableTwoFa)
-      router.push('http://localhost:3000/QrCode');
-    else
-      router.push('http://localhost:3000/Dashbord');
-      // response.enableTwoFa
+       fetchTokenAndConnectSocket();
 
 
     }, [router.query.id]);

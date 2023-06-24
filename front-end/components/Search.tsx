@@ -44,26 +44,275 @@ const closeModale = () =>{
     setInputValue('')
     setIsOpen(false)
   }
+  const removeChat = (channel : string) =>{
+    context?.setChannels(prevcontact =>
+      prevcontact.filter(chat => chat.channelName !== channel))
+  }
 
   useEffect(() =>{
     if (context?.socket){
-        context?.socket.on('join', (pay)=>{
-            if (pay){
-                console.log(pay);
-                context.setChannels((prev) =>[...prev, {avatar : pay.avatar, channelName: pay.channelName}]);
-            }
+        context.socket.on('channelRemoved', (pay) =>{
+          if (pay){
+            const fetchData = async () => {
+              try {
+                const res = await axios.post(
+                  'http://localhost:5000/chat/memberships',
+                  { login: context?.login },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${context?.token}`,
+                    },
+                  }
+                );
+                // context?.setContactChat(res.data);
+                context?.setChannels(res.data);
+        
+              } catch (error) {
+                console.error('Error fetching data:', error);
+              }
+            };
+          
+            fetchData();
+
+          }
         })
+        context?.socket.on('joinOther', (pay) =>{
+          if (pay){
+            console.log('her channel name ', pay)
+            const fetchData = async () => {
+              try {
+                const res = await axios.post(
+                  'http://localhost:5000/chat/memberships',
+                  { login: context?.login },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${context?.token}`,
+                    },
+                  }
+                );
+                // context?.setContactChat(res.data);
+                context?.setChannels(res.data);
+        
+              } catch (error) {
+                console.error('Error fetching data:', error);
+              }
+            };
+          
+            fetchData();
+            // const GetDat = async () =>{
+            //   const res = await axios.post(
+            //     'http://localhost:5000/chat/channel/message/all',
+            //     {channelName: pay.channelName}, 
+            //     {
+            //       headers:{
+            //         Authorization : `Bearer ${context?.token}`,
+            //       },
+            //     }
+            //   );
+            // }
+          }
+        })
+        
+        context?.socket.on('join', (pay)=>{
+          if (pay){
+            console.log('her channel name ', pay)
+            const fetchData = async () => {
+              try {
+                const res = await axios.post(
+                  'http://localhost:5000/chat/memberships',
+                  { login: context?.login },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${context?.token}`,
+                    },
+                  }
+                );
+                // context?.setContactChat(res.data);
+                context?.setChannels(res.data);
+        
+              } catch (error) {
+                console.error('Error fetching data:', error);
+              }
+            };
+          
+            fetchData();
+            // const GetDat = async () =>{
+            //   const res = await axios.post(
+            //     'http://localhost:5000/chat/channel/message/all',
+            //     {channelName: pay.channelName}, 
+            //     {
+            //       headers:{
+            //         Authorization : `Bearer ${context?.token}`,
+            //       },
+            //     }
+            //   );
+            // }
+          }
+        })
+        
         context.socket.on('errorJoin' , (pay) =>{
-            if (pay)
-                console.log(pay)
+            if (pay){
+              console.log(pay)
+              console.log('this is error')
+            }
         })
     }
 
+
   },[context?.socket])
+
+  const rmv = (login: string) => {
+    context?.setWaitToAccept(prev =>
+      prev.filter(friend => friend.login !== login)
+    );
+  };
+  // const removeChannelByName = (login: string) => {
+  //   context?.setWaitToAccept(prev =>
+  //     prev.filter(friend => friend.login !== login)
+  //   );
+  // };
+  const rmvFriend = (login: string) => {
+    context?.setFriends(prev =>
+      prev.filter(friend => friend.login !== login)
+    );
+  };
+  const rmvPend = (login: string) => {
+    context?.setPendingInvitation(prev =>
+      prev.filter(friend => friend.login !== login)
+    );
+  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [gameRoom, setGameRoom] = useState("")
+  const [mms, setMesg] = useState('');
+  const [name, setName] = useState('');
+
+
+  useEffect(() => {
+    if (context?.socket) {
+    //   context.socket.on('gameInvitation', (payload: any) => {
+        
+    //     console.log("game invite response ")
+    //     if (payload && payload.sender) {
+    //       setGameRoom(payload.sender)
+    //       setIsModalOpen(true)
+          
+    //     }
+    //     console.log(payload)
+    //   });
+      
+      context.socket.on('PrivateMessage', (payload: any) => {
+        console.log('Received payload:', payload);
+        // Check the payload object in the browser console
+        // to see if sender and receiver properties are present and correct
+        if (payload) {
+          setMesg(payload.content);
+          setName(payload.sender);
+          console.log(payload.content, payload.sender, payload.receiver);
+          if (!document.hidden) {
+            // Show a notification
+            console.log('newMsg from ', payload.sender);
+           openModal();
+          } else {
+            console.log("msg and not in this page");
+          }
+        }
+      });
+      context.socket.on('invite',(pay : any) =>{
+        if (pay){
+          console.log(pay);
+          const friend ={
+            login : pay.login,
+            username : pay.username,
+            avatar : pay.avatar
+          }
+
+            context.setPendingInvitation((prev) =>[...prev,friend])
+        }
+      })
+      context.socket.on('accept',(pay) =>{
+        if (pay){
+          rmv(pay.login);
+          context.setFriends((prev) => [...prev, {login : pay.login, avatar: pay.avatar, username: pay.username}])
+        }
+      })
+      context.socket.on('decline', (pay) =>{
+        if (pay){
+          if (pay.login !== context.login){
+
+            rmv(pay.login);
+          }
+        }
+      })
+      context?.socket.on('delete', (pay) =>{
+        if (pay){
+          rmvFriend(pay.login);
+        }
+      })
+      context.socket.on('cancelInvitation', (pay) =>{
+        if (pay){
+          rmvPend(pay.login)
+        }
+      })
+      context.socket.on('kick',(pay)=>{
+        if (pay){
+          const fetchData = async () => {
+            try {
+              const res = await axios.post(
+                'http://localhost:5000/chat/memberships',
+                { login: context?.login },
+                {
+                  headers: {
+                    Authorization: `Bearer ${context?.token}`,
+                  },
+                }
+              );
+              // context?.setContactChat(res.data);
+              context?.setChannels(res.data);
+      
+            } catch (error) {
+              console.error('Error fetching data:', error);
+            }
+          };
+        
+          fetchData();
+
+        }
+      })
+      context.socket.on('Update', (pay) =>{
+        if (pay)
+          console.log(pay);
+      })
+      context.socket.on('errorMessage', (pay) =>{
+        if (pay){
+          context.setMessageError(pay.message);
+          context.setError(true);
+
+        }
+          // console.log(pay);
+      })
+      
+    }
+
+  
+    return () => {
+      if (context?.socket) {
+        context.socket.off('PrivateMessage');
+        context.socket.off('invite');
+        context.socket.off('accept');
+        context.socket.off('delete');
+        context.socket.off('kick');
+        context.socket.off('Update');
+        context.socket.off('errorMessage');
+        context.socket.off('cancelInvitation');
+        // context.socket.off('gameInvitation');
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [context?.socket, context?.waitToAccept]);
 
   
   return (
-<div className="container relative left-0 z-50 flex w-3/4 h-auto md:h-full ">
+<div className="container relative left-0 z-40 flex w-3/4 h-auto md:h-full ">
     {isOpen && <ModalSearch isOpen={isOpen} closeModal={closeModale}   />}
                             <div className="relative flex items-center w-full h-20 lg:w-64 group">
                                 <div className="absolute z-50 flex items-center justify-center  w-auto h-10 p-3 pr-2 text-sm text-gray-500 uppercase cursor-pointer sm:hidden">

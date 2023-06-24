@@ -53,7 +53,7 @@ const Other = () =>{
       const fetchData = async  () =>{
         try{
           const res = await axios.post('http://localhost:5000/user/profile',{
-            login: "oqatim"
+            login: "izail"
           },
           {
             headers:{

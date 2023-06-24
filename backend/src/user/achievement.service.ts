@@ -7,7 +7,7 @@ export class Achievements {
 
   constructor() {
     // Read the JSON file and parse its contents
-    const jsonData = readFileSync('/goinfre/izail/updateversion/backend/src/acheivements.json', 'utf8');
+    const jsonData = readFileSync('/goinfre/izail/good/backend/src/acheivements.json', 'utf8');
     this.data = JSON.parse(jsonData);
   }
 

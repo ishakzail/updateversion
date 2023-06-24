@@ -1,9 +1,9 @@
-
-
 import GetDataHistory, {GetDataAchievement, GetDataFriend, DatSend, DataRecieved, BlackList} from '@/components/GetData';
 import BarLeft from './BarLeft';
 import { useContext } from 'react';
 import { MyContext } from './Context';
+import avatar from '../image/avatar.webp'
+import Image from 'next/image';
 
 interface PropsCallBarLeft{
   page : string;
@@ -11,6 +11,16 @@ interface PropsCallBarLeft{
 
 export default function  Functions(){
 
+}
+export const GetAvatar = ({avat } : {avat : string | undefined}) =>{
+  if (avat === '0')
+    return (
+      <Image src={avatar} alt="ava" />
+    );
+  else
+      return (
+        <img src={avat} alt="ava" />
+      );
 }
 
 
@@ -27,7 +37,7 @@ export function DataFunction (nbr : number){
               return <GetDataAchievement />
             }
             else if (nbr == 3){
-              
+
               return <GetDataFriend />
             }
             else if (nbr == 4){

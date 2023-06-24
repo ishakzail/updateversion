@@ -8,30 +8,38 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTableTennisPaddleBall } from '@fortawesome/free-solid-svg-icons';
 import {DataFunction, CallBarLeft} from '@/components/Functions';
 import NavBar from '@/components/NavBar';
-import { MyContext , ContextTypes} from '@/components/Context';
-import Modal from '@/components/Modal';
+import { MyContext , ContextTypes, FriendType} from '@/components/Context';
+import Modal, { ModalInvite } from '@/components/Modal';
 import axios from 'axios';
 import {io} from "socket.io-client";
 import createSocketConnection from '@/components/socketConnection'
 import { useRouter } from 'next/router';
 import { MesgType } from '@/components/Context';
+import { Sleeping } from 'matter-js';
+import { Socket } from 'dgram';
 // import { initSocketConnection, getSocket } from '@/components/socketConnection';
 
 var i = 0;
 
 
+function usleep(milliseconds: number) {
+  return new Promise<void>(resolve => {
+    setTimeout(resolve, milliseconds);
+  });
+}
 
 
 
 
 
-
-export default function Progress() {
+export default  function Progress() {
   const context = useContext(MyContext);
 
   const router = useRouter();
   const [mms, setMesg] = useState('');
   const [name, setName] = useState('');
+    const [gameRoom, setGameRoom] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
 
   
@@ -46,7 +54,6 @@ export default function Progress() {
       console.log(paylo);
     })
   }
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -57,97 +64,105 @@ export default function Progress() {
     setIsModalOpen(false);
   };
 
-  const rmv = (login: string) => {
-    context?.setWaitToAccept(prev =>
-      prev.filter(friend => friend.login !== login)
-    );
-  };
-  const rmvFriend = (login: string) => {
-    context?.setFriends(prev =>
-      prev.filter(friend => friend.login !== login)
-    );
-  };
-  const rmvPend = (login: string) => {
-    context?.setPendingInvitation(prev =>
-      prev.filter(friend => friend.login !== login)
-    );
-  };
+  // const rmv = (login: string) => {
+  //   context?.setWaitToAccept(prev =>
+  //     prev.filter(friend => friend.login !== login)
+  //   );
+  // };
+  // const rmvFriend = (login: string) => {
+  //   context?.setFriends(prev =>
+  //     prev.filter(friend => friend.login !== login)
+  //   );
+  // };
+  // const rmvPend = (login: string) => {
+  //   context?.setPendingInvitation(prev =>
+  //     prev.filter(friend => friend.login !== login)
+  //   );
+  // };
+  const [user, SetUser] = useState<FriendType>()
+     
 
-  useEffect(() => {
-    if (context?.socket) {
-      context.socket.on('PrivateMessage', (payload: any) => {
-        console.log('Received payload:', payload);
-        // Check the payload object in the browser console
-        // to see if sender and receiver properties are present and correct
-        if (payload) {
-          setMesg(payload.content);
-          setName(payload.sender);
-          console.log(payload.content, payload.sender, payload.receiver);
-          if (!document.hidden) {
-            // Show a notification
-            console.log('newMsg from ', payload.sender);
-           openModal();
-          } else {
-            console.log("msg and not in this page");
-          }
-        }
-      });
-      context.socket.on('invite',(pay : any) =>{
-        if (pay){
-          console.log(pay);
-          const friend ={
-            login : pay.login,
-            username : pay.username,
-            avatar : pay.avatar
-          }
+  // useEffect(() => {
+  //   if (context?.socket) {
+  //     context.socket.on('gameInvitation', (payload: any) => {
+        
+  //       console.log("game invite response ")
+  //       if (payload && payload.sender) {
+  //         setGameRoom(payload.sender)
+  //         setIsModalOpen(true)
+          
+  //       }
+  //       console.log(payload)
+  //     });
+      
+  //     context.socket.on('PrivateMessage', (payload: any) => {
+  //       console.log('Received payload:', payload);
+  //       // Check the payload object in the browser console
+  //       // to see if sender and receiver properties are present and correct
+  //       if (payload) {
+  //         setMesg(payload.content);
+  //         setName(payload.sender);
+  //         console.log(payload.content, payload.sender, payload.receiver);
+  //         if (!document.hidden) {
+  //           // Show a notification
+  //           console.log('newMsg from ', payload.sender);
+  //          openModal();
+  //         } else {
+  //           console.log("msg and not in this page");
+  //         }
+  //       }
+  //     });
+  //     context.socket.on('invite',(pay : any) =>{
+  //       if (pay){
+  //         console.log(pay);
+  //         const friend ={
+  //           login : pay.login,
+  //           username : pay.username,
+  //           avatar : pay.avatar
+  //         }
 
-            context.setPendingInvitation((prev) =>[...prev,friend])
-        }
-      })
-      context.socket.on('accept',(pay) =>{
-        if (pay){
-          context.waitToAccept.map((user) =>{
-            if (user.login === pay.login){
-              rmv(user.login);
-              context.setFriends((prev) =>[...prev,user])
-            }
-          })
+  //           context.setPendingInvitation((prev) =>[...prev,friend])
+  //       }
+  //     })
+  //     context.socket.on('accept',(pay) =>{
+  //       if (pay){
+  //         rmv(pay.login);
+  //         context.setFriends((prev) => [...prev, {login : pay.login, avatar: pay.avatar, username: pay.username}])
+  //       }
+  //     })
+  //     context.socket.on('decline', (pay) =>{
+  //       if (pay){
+  //         if (pay.login !== context.login){
 
-
-        }
-      })
-      context.socket.on('decline', (pay) =>{
-        if (pay){
-          if (pay.login !== context.login){
-
-            rmv(pay.login);
-          }
-        }
-      })
-      context?.socket.on('delete', (pay) =>{
-        if (pay){
-          rmvFriend(pay.login);
-        }
-      })
-      context.socket.on('cancelInvitation', (pay) =>{
-        if (pay){
-          rmvPend(pay.login)
-        }
-      })
-    }
+  //           rmv(pay.login);
+  //         }
+  //       }
+  //     })
+  //     context?.socket.on('delete', (pay) =>{
+  //       if (pay){
+  //         rmvFriend(pay.login);
+  //       }
+  //     })
+  //     context.socket.on('cancelInvitation', (pay) =>{
+  //       if (pay){
+  //         rmvPend(pay.login)
+  //       }
+  //     })
+  //   }
 
   
-    return () => {
-      if (context?.socket) {
-        context.socket.off('PrivateMessage');
-        context.socket.off('invite');
-        context.socket.off('accept');
-        context.socket.off('delete');
-        context.socket.off('cancelInvitation');
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [context?.socket]);
+  //   return () => {
+  //     if (context?.socket) {
+  //       context.socket.off('PrivateMessage');
+  //       context.socket.off('invite');
+  //       context.socket.off('accept');
+  //       context.socket.off('delete');
+  //       context.socket.off('cancelInvitation');
+  //       context.socket.off('gameInvitation');
+  //     }
+  //   };
+  // // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [context?.socket, context?.waitToAccept]);
   
   
   
@@ -265,6 +280,25 @@ export default function Progress() {
   const[check, setCheck] = useState(0);
   const [msg, setMsg] = useState("");
 
+  useEffect(() =>{
+    if (context?.socket)
+    context.socket.on('gameInvitation', (payload: any) => {
+        
+      console.log("game invite response ")
+      if (payload && payload.sender) {
+        setGameRoom(payload.sender)
+        setIsModalOpen(true)
+        
+      }
+      console.log(payload)
+    });
+    return () =>{
+      if (context?.socket){
+        context.socket.off('gameInvitation')
+      }
+    }
+  }, [context?.socket])
+
  
   
   
@@ -295,7 +329,7 @@ export default function Progress() {
   return (
     <div className='bg-gradient-to-t from-gray-100 to-gray-400 min-h-screen ' >
       <div className='flex flex-col container mx-auto h-screen min-h-[1100px] py-2 gap-3  '>
-      {isModalOpen && <Modal isOpen={isModalOpen} closeModal={closeModal} title={name} msg={mms} color="bg-white"/>}
+      {/* {isModalOpen && <Modal isOpen={isModalOpen} closeModal={closeModal} title={name} msg={mms} color="bg-white"/>} */}
       <div className=' h-1/2 flex md:space-x-2'>
         <div className="hidden md:flex md:flex-col min-w-[130px]  md:w-[15%]  bg-gray-200 shadow-2xl shadow-gray-200  rounded-2xl dark:bg-gray-700 pt-4   ">
                    <div className=" self-center">
