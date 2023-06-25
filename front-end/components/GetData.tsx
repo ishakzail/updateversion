@@ -9,6 +9,7 @@ import { MyContext, MatchType } from "./Context";
 import avatar from '../image/avatar.webp'
 import {ModalChat} from "./Modal";
 import { FriendType } from "./Context";
+import Router from "next/router";
 
 
 
@@ -28,7 +29,6 @@ const getImgSrc = (name : string)  =>{
 
 
 export default function GetDataHistory({matches } : {matches : MatchType[]}){
-  console.log('this is matches ', matches)
   const [Img, setImg] = useState<string | StaticImageData>('');
     const context = useContext(MyContext);
     const TreatImage = (img : string)=>{
@@ -142,6 +142,8 @@ export  function GetDataAchievement(){
 
 export function GetDataFriend() {
     const context = useContext(MyContext);
+  const router = Router;
+
     console.log()
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [login, setLogin] = useState('');
@@ -195,7 +197,8 @@ export function GetDataFriend() {
       removefriend(friend.login);
     }
     const viewProfile = (friend : FriendType) =>{
-      
+      context?.setProfileuser(friend.login);
+      router.push(`http://localhost:3000/Profile/${context?.profileuser}`)
     }
   
     if (context?.friends.length === 0) {
